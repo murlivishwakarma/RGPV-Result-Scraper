@@ -15,3 +15,5 @@ submit_xp = '/html/body/form/div[3]/div/div[2]/table/tbody/tr[5]/td/div/table/tb
 name_id = 'ctl00_ContentPlaceHolder1_lblNameGrading'
 
 roll_no_id = 'ctl00_ContentPlaceHolder1_lblRollNoGrading'
+
+reset_xp = '//*[@id="ctl00_ContentPlaceHolder1_btnReset"]'
