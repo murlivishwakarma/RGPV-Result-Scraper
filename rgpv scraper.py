@@ -4,7 +4,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException, NoSuchElementException, ElementNotInteractableException 
+from selenium.common.exceptions import TimeoutException, NoSuchElementException,NoAlertPresentException 
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.common.alert import Alert
 import easyocr
@@ -24,34 +24,73 @@ def getWeb():
     btech_click = driver.find_element(By.XPATH,course_click_xp).click()
 
 
-def getImg():
-    
-    captcha = driver.find_element(By.XPATH,captcha_xp)
-    captcha_url = captcha.get_attribute('src')
-    response = requests.get(captcha_url)
-
-    captcha_img = Image.open(BytesIO(response.content))  
-    reader = easyocr.Reader(['en'])
-    result = reader.readtext(captcha_img)
-
-    captcha_text = ' '.join([item[1] for item in result]) 
-    global captcha_final
-    captcha_final = captcha_text.replace(' ','')
-    
-
 def detailsInput():
     
-    enroll_no = '0103IS221001'
     enroll_input = driver.find_element(By.XPATH,enroll_xp)
     enroll_input.send_keys(enroll_no)
-    
+
     sem_ddn = driver.find_element(By.XPATH,sem_ddn_xp).click()
     sem_sel = driver.find_element(By.XPATH, sem_sel_xp).click()
 
-    captcha_input = driver.find_element(By.XPATH, captcha_input_xp)
-    captcha_input.send_keys(captcha_final) 
-    time.sleep(3)
-    submit_info = driver.find_element(By.XPATH, submit_xp).click()
+
+def captchaConfig():
+    
+    retry = True
+    while retry:
+
+        captcha = driver.find_element(By.XPATH,captcha_xp)
+        captcha_url = captcha.get_attribute('src')
+        response = requests.get(captcha_url)
+
+        captcha_img = Image.open(BytesIO(response.content))  
+        reader = easyocr.Reader(['en'])
+        result = reader.readtext(captcha_img)
+
+        captcha_text = ' '.join([item[1] for item in result]) 
+        global captcha_final
+        captcha_final = captcha_text.replace(' ','')
+        captcha_input = driver.find_element(By.XPATH, captcha_input_xp)
+        captcha_input.send_keys(Keys.CONTROL + 'a')  
+        captcha_input.send_keys(Keys.BACKSPACE)
+        captcha_input.send_keys(captcha_final)
+        time.sleep(3)
+        submit_info = driver.find_element(By.XPATH, submit_xp).click()
+
+        try: 
+            
+            alert = driver.switch_to.alert
+            alert_message = alert.text
+            
+            if alert_message == 'you have entered a wrong text':
+                alert.accept()
+                retry = True
+
+            elif alert_message == 'Result for this Enrollment No. not Found':
+                
+                alert.accept()
+                reset = driver.find_element(By.XPATH, reset_xp).click()
+                return False
+        
+        except NoAlertPresentException:
+            retry = False
+    
+    return True
+
+
+def processEnroll():
+
+    global enroll_no
+    with open('iot_info.json', 'r') as file:
+        data = json.load(file)
+
+    for entry in data:
+        enroll_no = entry['enroll']
+        detailsInput()
+        
+        if captchaConfig():
+            resultExt()
+        else:
+            continue
 
 
 def resultExt():
@@ -81,19 +120,11 @@ def resultExt():
     }
     json_output = json.dumps(result, indent=2)
 
-    with open('result.json', 'w') as f:
-        f.write(json_output)
+    with open('result.json', 'a') as f:
+        f.write(json_output + '\n')
     
-    
+    reset = driver.find_element(By.XPATH, reset_xp).click()
 
   
-
-    
-
-
-    
-
 getWeb()
-getImg()
-detailsInput()
-resultExt()
+processEnroll()
