@@ -19,7 +19,9 @@ from rgpv_xpath import *
 def getWeb():
 
     global driver
-    driver = webdriver.Firefox()
+    options = Options() 
+    options.add_argument("-headless")
+    driver = webdriver.Firefox(options=options)
     driver.get('http://result.rgpv.ac.in/Result/ProgramSelect.aspx')
     btech_click = driver.find_element(By.XPATH,course_click_xp).click()
 
@@ -80,7 +82,7 @@ def captchaConfig():
 def processEnroll():
 
     global enroll_no
-    with open('iot_info.json', 'r') as file:
+    with open('roll_numbers.json', 'r') as file:
         data = json.load(file)
 
     for entry in data:
@@ -100,6 +102,8 @@ def resultExt():
 
     name = soup.find('span', {'id': name_id}).text.strip()
     roll_no = soup.find('span', {'id': roll_no_id}).text.strip()
+    sgpa = soup.find('span', {'id': 'ctl00_ContentPlaceHolder1_lblSGPA'}).text.strip()
+    cgpa = soup.find('span', {'id': 'ctl00_ContentPlaceHolder1_lblcgpa'}).text.strip()
 
     subjects_and_grades = []
     subject_tables = soup.find_all('table', class_='gridtable', style='width:100%')
@@ -116,6 +120,8 @@ def resultExt():
     result = {
         "name": name,
         "roll_no": roll_no,
+        "sgpa": sgpa,
+        "cgpa": cgpa,
         "subjects_and_grades": subjects_and_grades
     }
     json_output = json.dumps(result, indent=2)
