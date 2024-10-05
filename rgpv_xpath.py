@@ -17,3 +17,7 @@ name_id = 'ctl00_ContentPlaceHolder1_lblNameGrading'
 roll_no_id = 'ctl00_ContentPlaceHolder1_lblRollNoGrading'
 
 reset_xp = '//*[@id="ctl00_ContentPlaceHolder1_btnReset"]'
+
+sgpa_id = 'ctl00_ContentPlaceHolder1_lblSGPA'
+
+cgpa_id = 'ctl00_ContentPlaceHolder1_lblcgpa'
